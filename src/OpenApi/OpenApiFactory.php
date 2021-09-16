@@ -26,15 +26,20 @@ class OpenApiFactory implements OpenApiFactoryInterface
         }
 
         $schemas = $openApi->getComponents()->getSecuritySchemes();
-        $schemas['cookieAuth'] = new \ArrayObject([
-            'type' => 'apiKey',
-            'in' => 'cookie',
-            'name' => 'PHPSESSIONID'
+        #$schemas['cookieAuth'] = new \ArrayObject([
+        #    'type' => 'apiKey',
+        #    'in' => 'cookie',
+        #    'name' => 'PHPSESSIONID'
+        #]);
+        $schemas['bearerAuth'] = new \ArrayObject([
+            'type' => 'http',
+            'scheme' => 'bearer',
+            'bearerFormat' => 'JWT'
         ]);
         #$openApi = $openApi->withSecurity(['cookieAuth' => []]);
 
-        $schema = $openApi->getComponents()->getSchemas();
-        $schema['Credentials'] = new \ArrayObject([
+        $schemas = $openApi->getComponents()->getSchemas();
+        $schemas['Credentials'] = new \ArrayObject([
             'type' => 'object',
             'properties' => [
                 'username' => [
@@ -45,6 +50,14 @@ class OpenApiFactory implements OpenApiFactoryInterface
                     'type' => 'string',
                     'example' => 'azerty'
                 ]
+            ]
+        ]);
+        $schemas['Token'] = new \ArrayObject([
+            'type' => 'object',
+            'properties' => [
+                'token' => [
+                    'type' => 'string',
+                ],  'readOnly' => true,
             ]
         ]);
 
@@ -67,11 +80,13 @@ class OpenApiFactory implements OpenApiFactoryInterface
                 ),
                 responses: [
                     '200' => [
-                        'description' => 'Utilisateur connecté',
+                        #'description' => 'Utilisateur connecté',
+                        'description' => 'Token JWT',
                         'content' => [
                             'application/json' => [
                                 'schema' => [
-                                    '$ref' => '#/components/schemas/User-read.User'
+                                    '$ref' => '#/components/schemas/Token'
+                                    #'$ref' => '#/components/schemas/User-read.User'
                                 ]
                             ]
                         ]

@@ -23,10 +23,15 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
             'openapi_definition_name' => 'Collection'
         ],
         denormalizationContext: ['groups' => ['write:Post']],
-        paginationItemsPerPage: 2,
-        paginationClientItemsPerPage: true,
+        #paginationItemsPerPage: 2,
+        #paginationClientItemsPerPage: true,
         collectionOperations: [
-            'get',
+            'get' => [
+                'openapi_context' => [
+                    #'security' => ['cookieAuth' => []]
+                    'security' => [['bearerAuth' => []]]
+                ]
+            ],
             'post' => [
                 #'validation_groups' => ['create:Post']
             ],
@@ -152,6 +157,11 @@ class Post
     #[Groups(['read:collection'])]
     private $online = false;
 
+    /**
+     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="posts")
+     */
+    private $user;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -243,6 +253,18 @@ class Post
     public function setOnline(bool $online): self
     {
         $this->online = $online;
+
+        return $this;
+    }
+
+    public function getUser(): ?User
+    {
+        return $this->user;
+    }
+
+    public function setUser(?User $user): self
+    {
+        $this->user = $user;
 
         return $this;
     }
