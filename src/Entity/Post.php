@@ -100,7 +100,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
     ),
     ApiFilter(SearchFilter::class, properties: ['id' => 'exact', 'title' => 'partial'])
 ]
-class Post
+class Post //implements UserOwnedInterface
 {
     /**
      * @ORM\Id
@@ -122,7 +122,7 @@ class Post
     /**
      * @ORM\Column(type="string", length=255)
      */
-    #[Groups(['read:collection', 'write:Post'])]
+    #[Groups(['read:collection:User', 'write:Post'])]
     private $slug;
 
     /**
@@ -154,11 +154,11 @@ class Post
     /**
      * @ORM\Column(type="boolean", options={"default": "0"})
      */
-    #[Groups(['read:collection'])]
+    #[Groups(['read:collection:User'])]
     private $online = false;
 
     /**
-     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="posts")
+     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="posts", cascade={"persist"})
      */
     private $user;
 
