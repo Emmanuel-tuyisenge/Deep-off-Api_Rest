@@ -32,6 +32,7 @@ class UserOwnedDenormalizer implements
 
     public function supportsDenormalization($data, string $type, string $format = null, array $context = [])
     {
+        //return false;
         $reflectionClass = new \ReflectionClass($type);
         $alreadyCalled = $context[$this->getAlreadyCalledKey($type)] ?? false;
         return $reflectionClass->implementsInterface(UserOwnedInterface::class) && $alreadyCalled == false;

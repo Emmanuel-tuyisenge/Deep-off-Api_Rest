@@ -50,7 +50,7 @@ class CurrentUserExtension implements
             #if ($resourceClass == Post::class) {
             $alias = $queryBuilder->getRootAliases()[0];
             $user = $this->security->getUser();
-            #return;
+            return;
             if ($user) {
                 $queryBuilder
                     ->andWhere("$alias.user = :current_user")

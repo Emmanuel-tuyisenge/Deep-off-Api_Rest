@@ -3,11 +3,12 @@
 namespace App\Security\Voter;
 
 use App\Entity\User;
+use App\Entity\UserOwnedInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 use Symfony\Component\Security\Core\User\UserInterface;
 
-class PostVoter extends Voter
+class UserOwnedVoter extends Voter
 {
     public const CAN_EDIT = 'CAN_EDIT';
 
@@ -16,9 +17,10 @@ class PostVoter extends Voter
         // replace with your own logic
         // https://symfony.com/doc/current/security/voters.html
         return in_array($attribute, [self::CAN_EDIT])
-            && $subject instanceof \App\Entity\Post;
+            && $subject instanceof UserOwnedInterface;
     }
 
+    /**@param UserOwnedInterface $subject */
     protected function voteOnAttribute(string $attribute, $subject, TokenInterface $token): bool
     {
         $user = $token->getUser();

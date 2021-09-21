@@ -2,19 +2,25 @@
 
 namespace App\Entity;
 
+use App\Attribute\ApiAuthGroups;
 use Doctrine\ORM\Mapping as ORM;
+use App\Controller\EmptyContoller;
 use App\Repository\PostRepository;
 use App\Controller\PostCountController;
+use App\Controller\PostImageController;
 use App\Controller\PostPublishController;
 use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiResource;
+use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Validator\Constraints\Valid;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints\Length;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 
 /**
  * @ORM\Entity(repositoryClass=PostRepository::class)
+ * @Vich\Uploadable()
  */
 #[
     ApiResource(
@@ -25,6 +31,14 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
         denormalizationContext: ['groups' => ['write:Post']],
         #paginationItemsPerPage: 2,
         #paginationClientItemsPerPage: true,
+        graphql: [
+            'item_query',
+            'collection_query',
+            'create' => [
+                'validation_groups' => ['create:Post']
+            ],
+            'update',
+        ],
         collectionOperations: [
             'get' => [
                 'openapi_context' => [
@@ -95,12 +109,40 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
                         ]
                     ]
                 ]
+            ],
+            'image' => [
+                'method' => 'POST',
+                'path' => '/posts/{id}/image',
+                #'deserialize' => false,
+                'controller' => EmptyContoller::class,
+                #'controller' => PostImageController::class,
+                'openapi_context' => [
+                    'requestBody' => [
+                        'content' => [
+                            'multipart/form-data' => [
+                                'schema' => [
+                                    'type' => 'object',
+                                    'properties' => [
+                                        'file' => [
+                                            'type' => 'string',
+                                            'format' => 'binary'
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
             ]
         ]
     ),
-    ApiFilter(SearchFilter::class, properties: ['id' => 'exact', 'title' => 'partial'])
+    ApiFilter(SearchFilter::class, properties: ['id' => 'exact', 'title' => 'partial']),
+    ApiAuthGroups([
+        'CAN_EDIT' => ['read:collection:Owner'],
+        'ROLE_USER' => ['read:collection:User'],
+    ])
 ]
-class Post //implements UserOwnedInterface
+class Post implements UserOwnedInterface
 {
     /**
      * @ORM\Id
@@ -154,13 +196,32 @@ class Post //implements UserOwnedInterface
     /**
      * @ORM\Column(type="boolean", options={"default": "0"})
      */
-    #[Groups(['read:collection:User'])]
+    #[Groups(['read:collection:Owner'])]
     private $online = false;
 
     /**
      * @ORM\ManyToOne(targetEntity=User::class, inversedBy="posts", cascade={"persist"})
      */
     private $user;
+
+    /**
+     * @var File|null
+     * @Vich\UploadableField(mapping="post_image", fileNameProperty="filePath")
+     */
+    #[Groups(['write:Post'])]
+    private $file;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    #[Groups(['read:collection'])]
+    private $filePath;
+
+    /**
+     * @var string|null
+     */
+    #[Groups(['read:collection'])]
+    private $fileUrl;
 
     public function __construct()
     {
@@ -266,6 +327,54 @@ class Post //implements UserOwnedInterface
     {
         $this->user = $user;
 
+        return $this;
+    }
+
+    public function getFilePath(): ?string
+    {
+        return $this->filePath;
+    }
+
+    public function setFilePath(?string $filePath): self
+    {
+        $this->filePath = $filePath;
+
+        return $this;
+    }
+
+    /**
+     * @return  File|null
+     */
+    public function getFile(): ?File
+    {
+        return $this->file;
+    }
+
+    /**
+     * @param  File|null  $file
+     * @return  self
+     */
+    public function setFile(?File $file): Post
+    {
+        $this->file = $file;
+        return $this;
+    }
+
+    /**
+     * @return  string|null
+     */
+    public function getFileUrl(): ?string
+    {
+        return $this->fileUrl;
+    }
+
+    /**
+     * @param  string|null  $fileUrl
+     * @return  Post
+     */
+    public function setFileUrl(?string $fileUrl): Post
+    {
+        $this->fileUrl = $fileUrl;
         return $this;
     }
 }

@@ -31,6 +31,19 @@ services:
     App\Repository\DependencyRepository:
         arguments: ["%kernel.project_dir%"]
 
+    App\EventListener\DeserializeListener:
+        tags:
+            - {
+                name: 'kernel.event_listener',
+                event: 'kernel.request',
+                method: 'onkernelRequest',
+                priority: 2
+             }
+        decorates: 'api_platform.listener.request.deserialize'
+        arguments:
+            - "@.inner"
+        autoconfigure: false
+
     #App\Serializer\PostContextBuilder:
     #    decorates: 'api_platform.serializer.context_builder'
     #    arguments: [ '@App\Serializer\PostContextBuilder.inner' ]
